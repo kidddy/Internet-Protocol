@@ -1,0 +1,85 @@
+	На switch1:
+Switch>enable
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#vlan 2
+Switch(config-vlan)#name users
+Switch(config-vlan)#exit
+Switch(config)#vlan 3
+Switch(config-vlan)#name server
+
+Switch(config)#interface FastEthernet 0/1
+Switch(config-if)#switchport mode access 
+Switch(config-if)#switchport access vlan 3
+Switch(config-if)#exit
+
+Switch(config)#interface range fastEthernet 0/5-7
+Switch(config-if-range)#switchport mode access
+Switch(config-if-range)#switchport access vlan 2
+Switch(config-if-range)#exit
+
+Switch(config)#int fa0/2
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 2,3
+Switch(config-if)#exit
+
+	На Router1:
+Router>enable 
+Router#configure terminal
+Router(config)#int fa 0/0
+Router(config-if)#no shutdown
+Router(config-if)#exit
+
+Router(config)#interface fastEthernet 0/0.2
+Router(config-subif)#encapsulation dot1Q 2
+Router(config-subif)#ip address 192.168.2.1 255.255.255.0
+Router(config-subif)#no shutdown 
+Router(config-subif)#exit
+
+Router(config)#interface fastEthernet 0/0.3
+Router(config-subif)#encapsulation dot1Q 3
+Router(config-subif)#ip address 192.168.3.1 255.255.255.0
+Router(config-subif)#no shutdown
+Router(config-subif)#exit
+
+Router(config)#int fa 0/1
+Router(config-if)#ip address 213.234.10.2 255.255.255.252
+Router(config-if)#no shutdown
+Router(config-if)#exit
+
+	На Router2:
+Router>enable
+Router#conf t
+Router(config)#int fa 0/0
+Router(config-if)#ip address 213.234.10.1 255.255.255.252
+Router(config-if)#no shutdown
+Router(config-if)#exit
+
+Router(config)#int fa 0/1
+Router(config-if)#ip address 213.234.20.1 255.255.255.252
+Router(config-if)#no shutdown
+Router(config-if)#exit
+
+	На Router1:
+Router(config)#ip route 0.0.0.0 0.0.0.0 213.234.10.1
+
+Router(config)#int fa 0/1
+Router(config-if)#ip nat outside 
+Router(config-if)#exit
+
+Router(config)#int fa 0/0.2
+Router(config-subif)#ip nat outside 
+Router(config-subif)#exit
+
+Router(config)#int fa 0/0.3
+Router(config-subif)#ip nat outside
+Router(config-subif)#exit
+
+Router(config)#ip access-list standard for-nat
+Router(config-std-nacl)#permit 192.168.2.0 0.0.0.255
+Router(config-std-nacl)#permit 192.168.3.0 0.0.0.255
+Router(config-std-nacl)#end
+
+Router(config)#ip nat inside source list for-nat interface fastEther-net 0/1 overload
+Router(config)#end
+Router(config)# ip nat inside source static tcp 192.168.3.2. 80 213.234.10.2 80
