@@ -1,0 +1,230 @@
+	ABR
+ABR(config)#int se 2/0
+ABR(config-if)#ip address 10.1.1.2 255.255.255.0
+ABR(config-if)#no shut
+ABR(config-if)#exit
+ABR(config)# int se 3/0
+ABR(config-if)#ip address 192.168.1.1 255.255.255.0
+ABR(config-if)#no shutdown
+ABR(config-if)#exit
+
+
+	R1AR0
+R0AR1(config)#int fa 0/0
+R0AR1(config-if)#ip address 10.2.2.1 255.255.255.0
+R0AR1(config-if)#no shut
+R0AR1(config-if)#exit
+R0AR1(config)#int se 2/0
+R0AR1(config-if)#ip address 10.1.1.1 255.255.255.0
+R0AR1(config-if)#no shut
+R0AR1(config-if)#exit
+
+	R2AR0
+R2AR0(config)#int fa 0/0
+R2AR0(config-if)#ip address 10.2.2.2 255.255.255.0
+R2AR0(config-if)#no shut
+R2AR0(config-if)#exit
+R2AR0(config)#int se 2/0
+R2AR0(config-if)#ip address 10.3.3.1 255.255.255.0
+R2AR0(config-if)#no shut
+R2AR0(config-if)#exit
+R2AR0(config)#int lo 0
+R2AR0(config-if)#ip address 10.13.0.1 255.255.255.255
+R2AR0(config-if)#exit
+R2AR0(config)#int lo 1
+R2AR0(config-if)#ip address 10.13.1.1 255.255.255.255
+R2AR0(config-if)#exit
+R2AR0(config)#int lo 2
+R2AR0(config-if)#ip address 10.13.2.1 255.255.255.255
+R2AR0(config-if)#exit
+R2AR0(config)#int lo 3
+R2AR0(config-if)#ip address 10.13.3.1 255.255.255.255
+R2AR0(config-if)#exit
+
+	R0AR1
+R0AR1(config)#router ospf 1
+R0AR1(config-router)#router-id 1.1.1.1
+R0AR1(config-router)#network 10.1.1.0 0.0.0.255 area 0
+R0AR1(config-router)#network 10.2.2.0 0.0.0.255 area 0
+R0AR1(config-router)#exit
+
+	R2AR0
+R2AR0(config)#router ospf 1
+R2AR0(config-router)#router-id 2.2.2.2
+R2AR0(config-router)#network 10.2.2.0 0.0.0.255 area 0
+R2AR0(config-router)#network 10.13.0.0 0.0.255.255 area 0
+
+	ABR
+ABR(config)#router ospf 1
+ABR(config-router)#rou
+ABR(config-router)#router-id 1.1.2.2
+ABR(config-router)#net
+ABR(config-router)#network 10.0.0.0 0.255.255.255 area 0
+
+	R0AR1
+R0AR1#show ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/8 is variably subnetted, 6 subnets, 2 masks
+C       10.1.1.0/24 is directly connected, Serial2/0
+C       10.2.2.0/24 is directly connected, FastEthernet0/0
+O       10.13.0.1/32 [110/2] via 10.2.2.2, 00:04:54, FastEthernet0/0
+O       10.13.1.1/32 [110/2] via 10.2.2.2, 00:04:54, FastEthernet0/0
+O       10.13.2.1/32 [110/2] via 10.2.2.2, 00:04:54, FastEthernet0/0
+O       10.13.3.1/32 [110/2] via 10.2.2.2, 00:04:54, FastEthernet0/0
+
+R0AR1#show ip ospf database
+            OSPF Router with ID (1.1.1.1) (Process ID 1)
+
+                Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+2.2.2.2         2.2.2.2         449         0x80000006 0x002551 5
+1.1.1.1         1.1.1.1         222         0x80000004 0x00313d 3
+1.1.2.2         1.1.2.2         222         0x80000002 0x008318 2
+
+                Net Link States (Area 0)
+Link ID         ADV Router      Age         Seq#       Checksum
+10.2.2.1        1.1.1.1         496         0x80000001 0x009e3d
+R0AR1#show ip ospf database network
+
+            OSPF Router with ID (1.1.1.1) (Process ID 1)
+
+                Net Link States (Area 0)
+
+  Routing Bit Set on this LSA
+  LS age: 557
+  Options: (No TOS-capability, DC)
+  LS Type: Network Links
+  Link State ID: 10.2.2.1  (address of Designated Router)
+  Advertising Router: 1.1.1.1
+  LS Seq Number: 80000001
+  Checksum: 0x9e3d
+  Length: 32
+  Network Mask: /24
+        Attached Router: 2.2.2.2
+        Attached Router: 1.1.1.1
+
+
+R1AR1(config)#int serial 2/0
+R1AR1(config-if)#ip address 192.168.1.2 255.255.255.0
+R1AR1(config-if)#no shut
+R1AR1(config-if)#exit
+R1AR1(config)#int se 3/0 
+R1AR1(config-if)#ip add 192.168.2.1 255.255.255.0
+R1AR1(config-if)#no shut
+R1AR1(config-if)#exit
+
+	ASBR
+ASBR(config)#int se 2/0
+ASBR(config-if)#ip address 192.168.2.2 255.255.255.0
+ASBR(config-if)#no shut
+ASBR(config-if)#exit
+
+	R1AR1
+R1AR1(config)#router ospf 1
+R1AR1(config-router)#router-id 3.3.3.3
+R1AR1(config-router)#network 192.168.0.0 0.0.255.255 area 1
+
+	ASBR
+ASBR(config)#router ospf 1
+ASBR(config-router)#router-id 4.4.4.4
+ASBR(config-router)#network 192.168.2.0 0.0.0.255 area 1
+ASBR(config-router)#exit
+ASBR(config)#ip route 1.0.0.0 255.0.0.0 null 0
+ASBR(config)#ip route 2.0.0.0 255.0.0.0 null 0
+ASBR(config)#ip route 3.0.0.0 255.0.0.0 null 0
+
+	ABR
+ABR(config)#router ospf 1
+ABR(config-router)#network 192.168.1.0 0.0.0.255 area 1
+
+	R0AR1
+R0AR1#show ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/24 is subnetted, 2 subnets
+C       10.1.1.0 is directly connected, Serial2/0
+C       10.2.2.0 is directly connected, FastEthernet0/0
+O IA 192.168.1.0/24 [110/128] via 10.1.1.2, 00:03:08, Serial2/0
+O IA 192.168.2.0/24 [110/192] via 10.1.1.2, 00:02:58, Serial2/0
+
+
+	R2AR0
+R2AR0(config)#router rip
+R2AR0(config-router)#version 2
+R2AR0(config-router)#network 10.0.0.0
+R2AR0(config-router)#exit
+R2AR0(config)#router ospf 1
+R2AR0(config-router)#redistribute rip subnets 
+R2AR0(config-router)#exit
+
+	RTR_RIP
+RTR_RIP(config)#int se 2/0
+RTR_RIP(config-if)#ip address 10.3.3.2 255.255.255.0
+RTR_RIP(config-if)#no shut
+RTR_RIP(config)#exit
+RTR_RIP(config)#router rip
+RTR_RIP(config-router)#version 2
+RTR_RIP(config-router)#no auto-summary
+RTR_RIP(config-router)#network 10.0.0.0
+RTR_RIP(config-router)#network 172.20.0.0
+RTR_RIP(config-router)#exit
+RTR_RIP(config)#int lo 0
+RTR_RIP(config-if)#ip address 172.20.0.1 255.255.255.0
+RTR_RIP(config-if)#exit
+RTR_RIP(config)#int lo 1
+RTR_RIP(config-if)#ip address 172.20.1.1 255.255.255.0
+RTR_RIP(config-if)#exit
+RTR_RIP(config)#int lo 2
+RTR_RIP(config-if)#ip address 172.20.2.1 255.255.255.0
+RTR_RIP(config-if)#exit
+RTR_RIP(config)#int lo 3
+RTR_RIP(config-if)#ip address 172.20.3.1 255.255.255.0
+RTR_RIP(config-if)#exit
+
+	R0AR1
+R0AR1#show ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/24 is subnetted, 2 subnets
+C       10.1.1.0 is directly connected, Serial2/0
+C       10.2.2.0 is directly connected, FastEthernet0/0
+O IA 192.168.1.0/24 [110/128] via 10.1.1.2, 00:24:05, Serial2/0
+O IA 192.168.2.0/24 [110/192] via 10.1.1.2, 00:23:55, Serial2/0
+	
+	ABR
+ABR(config)#router ospf 1
+ABR(config-router)#area 1 stub
+
+	R1AR1
+R1AR1(config)#router ospf 1
+R1AR1(config-router)#area 1 stub
+
+	ASBR
+ASBR(config)#router ospf 1
+ASBR(config-router)#area 1 stub
