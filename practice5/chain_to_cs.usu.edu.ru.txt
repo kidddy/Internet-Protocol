@@ -1,0 +1,105 @@
+C:\Users\qxidd>ipconfig /flushdns
+
+Настройка протокола IP для Windows
+
+Кэш сопоставителя DNS успешно очищен.
+
+C:\Users\qxidd>nslookup
+Сервер по умолчанию:  UnKnown
+Address:  192.168.43.1
+
+#  a.root-servers.net	198.41.0.4, 2001:503:ba3e::2:30	VeriSign, Inc.  это корневой сервер
+> set q=ns
+> ru. a.root-servers.net
+Сервер:  a.root-servers.net
+Addresses:  2001:503:ba3e::2:30
+          198.41.0.4
+
+ru      nameserver = a.dns.ripn.net
+ru      nameserver = e.dns.ripn.net
+ru      nameserver = f.dns.ripn.net
+ru      nameserver = d.dns.ripn.net
+ru      nameserver = b.dns.ripn.net
+a.dns.ripn.net  internet address = 193.232.128.6
+a.dns.ripn.net  AAAA IPv6 address = 2001:678:17:0:193:232:128:6
+e.dns.ripn.net  internet address = 193.232.142.17
+e.dns.ripn.net  AAAA IPv6 address = 2001:678:15:0:193:232:142:17
+f.dns.ripn.net  internet address = 193.232.156.17
+f.dns.ripn.net  AAAA IPv6 address = 2001:678:14:0:193:232:156:17
+d.dns.ripn.net  internet address = 194.190.124.17
+d.dns.ripn.net  AAAA IPv6 address = 2001:678:18:0:194:190:124:17
+b.dns.ripn.net  internet address = 194.85.252.62
+b.dns.ripn.net  AAAA IPv6 address = 2001:678:16:0:194:85:252:62
+
+> ru. a.dns.ripn.net
+Сервер:  a.dns.ripn.net
+Addresses:  2001:678:17:0:193:232:128:6
+          193.232.128.6
+
+RU      nameserver = b.dns.ripn.net
+RU      nameserver = a.dns.ripn.net
+RU      nameserver = e.dns.ripn.net
+RU      nameserver = f.dns.ripn.net
+RU      nameserver = d.dns.ripn.net
+a.dns.RIPN.net  AAAA IPv6 address = 2001:678:17:0:193:232:128:6
+b.dns.RIPN.net  AAAA IPv6 address = 2001:678:16:0:194:85:252:62
+d.dns.RIPN.net  AAAA IPv6 address = 2001:678:18:0:194:190:124:17
+e.dns.RIPN.net  AAAA IPv6 address = 2001:678:15:0:193:232:142:17
+f.dns.RIPN.net  AAAA IPv6 address = 2001:678:14:0:193:232:156:17
+a.dns.RIPN.net  internet address = 193.232.128.6
+b.dns.RIPN.net  internet address = 194.85.252.62
+d.dns.RIPN.net  internet address = 194.190.124.17
+e.dns.RIPN.net  internet address = 193.232.142.17
+f.dns.RIPN.net  internet address = 193.232.156.17
+
+> edu.ru. a.dns.RIPN.net
+Сервер:  a.dns.RIPN.net
+Addresses:  2001:678:17:0:193:232:128:6
+          193.232.128.6
+
+DNS request timed out.
+    timeout was 2 seconds.
+*** Превышено время ожидания запроса a.dns.RIPN.net
+
+> edu.ru. b.dns.RIPN.net
+Сервер:  b.dns.RIPN.net
+Addresses:  2001:678:16:0:194:85:252:62
+          194.85.252.62
+
+DNS request timed out.
+    timeout was 2 seconds.
+*** Превышено время ожидания запроса b.dns.RIPN.net
+
+> edu.ru d.dns.RIPN.net
+Сервер:  d.dns.RIPN.net
+Addresses:  2001:678:18:0:194:190:124:17
+          194.190.124.17
+
+DNS request timed out.
+    timeout was 2 seconds.
+EDU.RU  nameserver = ns.informika.RU
+EDU.RU  nameserver = ns2.informika.RU
+EDU.RU  nameserver = ns2.free.net
+EDU.RU  nameserver = ns.msu.RU
+EDU.RU  nameserver = ns.runnet.RU
+ns.MSU.RU       internet address = 93.180.0.1
+ns.RUNNET.RU    internet address = 194.85.32.18
+ns.INFORMIKA.RU internet address = 194.226.215.65
+ns2.INFORMIKA.RU        internet address = 194.190.241.65
+
+> usu.edu.ru. ns.MSU.RU
+Сервер:  ns.MSU.RU
+Address:  93.180.0.1
+
+usu.edu.ru      nameserver = ns.usaaa.ru
+usu.edu.ru      nameserver = ns.urgu.org
+
+> set q=A
+> cs.usu.edu.ru ns.usaaa.ru
+Сервер:  ns.usaaa.ru
+Address:  79.172.6.193
+
+Имя:     cs.usu.edu.ru
+Address:  212.193.68.254
+
+

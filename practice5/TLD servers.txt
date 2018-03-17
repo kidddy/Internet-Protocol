@@ -1,0 +1,83 @@
+C:\Users\qxidd>ipconfig /flushdns
+
+Настройка протокола IP для Windows
+
+Кэш сопоставителя DNS успешно очищен.
+
+C:\Users\qxidd>nslookup
+Сервер по умолчанию:  UnKnown
+Address:  192.168.43.1
+
+> set q=ns
+> com. e.root-servers.net
+Сервер:  e.root-servers.net
+Addresses:  2001:500:a8::e
+          192.203.230.10
+
+com     nameserver = a.gtld-servers.net
+com     nameserver = b.gtld-servers.net
+com     nameserver = c.gtld-servers.net
+com     nameserver = d.gtld-servers.net
+com     nameserver = e.gtld-servers.net
+com     nameserver = f.gtld-servers.net
+com     nameserver = g.gtld-servers.net
+com     nameserver = h.gtld-servers.net
+com     nameserver = i.gtld-servers.net
+com     nameserver = j.gtld-servers.net
+com     nameserver = k.gtld-servers.net
+com     nameserver = l.gtld-servers.net
+com     nameserver = m.gtld-servers.net
+a.gtld-servers.net      AAAA IPv6 address = 2001:503:a83e::2:30
+b.gtld-servers.net      AAAA IPv6 address = 2001:503:231d::2:30
+c.gtld-servers.net      AAAA IPv6 address = 2001:503:83eb::30
+d.gtld-servers.net      AAAA IPv6 address = 2001:500:856e::30
+e.gtld-servers.net      AAAA IPv6 address = 2001:502:1ca1::30
+f.gtld-servers.net      AAAA IPv6 address = 2001:503:d414::30
+g.gtld-servers.net      AAAA IPv6 address = 2001:503:eea3::30
+h.gtld-servers.net      AAAA IPv6 address = 2001:502:8cc::30
+i.gtld-servers.net      AAAA IPv6 address = 2001:503:39c1::30
+
+> org. f.root-servers.net
+Сервер:  f.root-servers.net
+Addresses:  2001:500:2f::f
+          192.5.5.241
+
+org     nameserver = c0.org.afilias-nst.info
+org     nameserver = d0.org.afilias-nst.org
+org     nameserver = b2.org.afilias-nst.org
+org     nameserver = a2.org.afilias-nst.info
+org     nameserver = b0.org.afilias-nst.org
+org     nameserver = a0.org.afilias-nst.info
+a0.org.afilias-nst.info AAAA IPv6 address = 2001:500:e::1
+a2.org.afilias-nst.info AAAA IPv6 address = 2001:500:40::1
+b0.org.afilias-nst.org  AAAA IPv6 address = 2001:500:c::1
+b2.org.afilias-nst.org  AAAA IPv6 address = 2001:500:48::1
+c0.org.afilias-nst.info AAAA IPv6 address = 2001:500:b::1
+d0.org.afilias-nst.org  AAAA IPv6 address = 2001:500:f::1
+a0.org.afilias-nst.info internet address = 199.19.56.1
+a2.org.afilias-nst.info internet address = 199.249.112.1
+b0.org.afilias-nst.org  internet address = 199.19.54.1
+b2.org.afilias-nst.org  internet address = 199.249.120.1
+c0.org.afilias-nst.info internet address = 199.19.53.1
+d0.org.afilias-nst.org  internet address = 199.19.57.1
+
+> ru. a.root-servers.net
+Сервер:  a.root-servers.net
+Addresses:  2001:503:ba3e::2:30
+          198.41.0.4
+
+ru      nameserver = a.dns.ripn.net
+ru      nameserver = e.dns.ripn.net
+ru      nameserver = f.dns.ripn.net
+ru      nameserver = d.dns.ripn.net
+ru      nameserver = b.dns.ripn.net
+a.dns.ripn.net  internet address = 193.232.128.6
+a.dns.ripn.net  AAAA IPv6 address = 2001:678:17:0:193:232:128:6
+e.dns.ripn.net  internet address = 193.232.142.17
+e.dns.ripn.net  AAAA IPv6 address = 2001:678:15:0:193:232:142:17
+f.dns.ripn.net  internet address = 193.232.156.17
+f.dns.ripn.net  AAAA IPv6 address = 2001:678:14:0:193:232:156:17
+d.dns.ripn.net  internet address = 194.190.124.17
+d.dns.ripn.net  AAAA IPv6 address = 2001:678:18:0:194:190:124:17
+b.dns.ripn.net  internet address = 194.85.252.62
+b.dns.ripn.net  AAAA IPv6 address = 2001:678:16:0:194:85:252:62

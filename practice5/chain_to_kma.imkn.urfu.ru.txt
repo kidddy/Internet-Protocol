@@ -1,0 +1,79 @@
+C:\Users\qxidd>ipconfig /flushdns
+
+Настройка протокола IP для Windows
+
+Кэш сопоставителя DNS успешно очищен.
+
+C:\Users\qxidd>nslookup
+Сервер по умолчанию:  UnKnown
+Address:  192.168.43.1
+
+> set q=ns
+> ru. e.root-servers.net
+Сервер:  e.root-servers.net
+Addresses:  2001:500:a8::e
+          192.203.230.10
+
+ru      nameserver = a.dns.ripn.net
+ru      nameserver = b.dns.ripn.net
+ru      nameserver = d.dns.ripn.net
+ru      nameserver = e.dns.ripn.net
+ru      nameserver = f.dns.ripn.net
+a.dns.ripn.net  AAAA IPv6 address = 2001:678:17:0:193:232:128:6
+b.dns.ripn.net  AAAA IPv6 address = 2001:678:16:0:194:85:252:62
+d.dns.ripn.net  AAAA IPv6 address = 2001:678:18:0:194:190:124:17
+e.dns.ripn.net  AAAA IPv6 address = 2001:678:15:0:193:232:142:17
+f.dns.ripn.net  AAAA IPv6 address = 2001:678:14:0:193:232:156:17
+a.dns.ripn.net  internet address = 193.232.128.6
+b.dns.ripn.net  internet address = 194.85.252.62
+d.dns.ripn.net  internet address = 194.190.124.17
+e.dns.ripn.net  internet address = 193.232.142.17
+f.dns.ripn.net  internet address = 193.232.156.17
+
+> urfu.ru. a.dns.ripn.net
+Сервер:  a.dns.ripn.net
+Addresses:  2001:678:17:0:193:232:128:6
+          193.232.128.6
+
+DNS request timed out.
+    timeout was 2 seconds.
+*** Превышено время ожидания запроса a.dns.ripn.net
+
+> urfu.ru. b.dns.ripn.net
+Сервер:  b.dns.ripn.net
+Addresses:  2001:678:16:0:194:85:252:62
+          194.85.252.62
+
+urfu.ru nameserver = ns1.urfu.ru
+urfu.ru nameserver = ns2.urfu.ru
+urfu.ru nameserver = ns3.urfu.ru
+ns1.urfu.ru     internet address = 212.193.66.21
+ns2.urfu.ru     internet address = 212.193.82.21
+ns3.urfu.ru     internet address = 212.193.72.21
+
+> imkn.urfu.ru ns1.urfu.ru
+Сервер:  ns1.urfu.ru
+Address:  212.193.66.21
+
+urfu.ru
+        primary name server = ns1.urfu.ru
+        responsible mail addr = hostmaster.urfu.ru
+        serial  = 2012091855
+        refresh = 3600 (1 hour)
+        retry   = 1800 (30 mins)
+        expire  = 2419200 (28 days)
+        default TTL = 3600 (1 hour)
+
+> imkn.urfu.ru ns1.urfu.ru
+Сервер:  ns1.urfu.ru
+Address:  212.193.66.21
+
+Имя:     imkn.urfu.ru
+Address:  212.193.68.65
+
+> kma.imkn.urfu.ru ns1.urfu.ru
+Сервер:  ns1.urfu.ru
+Address:  212.193.66.21
+
+Имя:     kma.imkn.urfu.ru
+Address:  212.193.66.79
