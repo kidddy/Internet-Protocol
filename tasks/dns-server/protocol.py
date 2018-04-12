@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 
 import bitstring
 import struct
@@ -42,16 +40,28 @@ class Question:
 
     def encode(self) -> bytes:
         b_name = name2query(self.domain_name)
-        return b_name + struct.pack(Question.__body_format,
+        return b_name + struct.pack(Question.body_format,
                                     self.type, self.cls)
+
+
+class Answer:
+    
+    def __init__(self,domain_name: str, qtype: int, qclass: int, ttl: int,
+                 rdata):
+        pass  # TODO
+
+    def encode(self):
+        raise NotImplementedError()  # TODO
 
 
 class Flags:
     """QR - query type:
         0 - request
         1 - answer
+
     opcode - operation code:
         0 - std query, 1 - inverse query, 2 - server status request
+
     AA - authoritative answer
     TC - truncated
     RD - recursion desired
@@ -79,7 +89,7 @@ class Flags:
     RCODE_NI = 4
     RCODE_RD = 5
 
-    flasgs_format = "uint:1, uint:4, bool, bool, bool, bool, uint:3, uint:4"
+    flags_format = "uint:1, uint:4, bool, bool, bool, bool, uint:3, uint:4"
     
     def __init__(self, QR, opcode, AA, TC, RD, RA, rcode):
         self.QR = QR
@@ -91,7 +101,7 @@ class Flags:
         self.rcode = rcode
 
     def encode(self) -> bytes:
-        return bitstring.pack(Flags.__format,
+        return bitstring.pack(Flags.flags_format,
             self.QR,
             self.opcode,
             self.AA,
@@ -101,19 +111,13 @@ class Flags:
             0,
             self.rcode).tobytes()
 
-    #  @classmethod
-    #  def decode(cls, data: bytes):
-        #  QR, opcode, AA, TC, RD, RA, _, rcode = bitstring.BitArray(data).unpack(
-            #  Flags.__format)
-        #  return cls(QR, opcode, AA, TC, RD, RA, rcode)
-
 
 class Package:
 
     header_format = ">H2sHHHH"
 
     def __init__(self, identification: int, flags: Flags,
-                 questions, answers, access_rights, extra_records):
+                 questions=[], answers=[], access_rights=[], extra_records=[]):
         self.identification = identification
         self.flags = flags
         self._questions = list(questions)
@@ -138,7 +142,7 @@ class Package:
         return (record for record in self._extra_records)
     
     def encode(self) -> bytes:
-        header = struct.pack(Package.__header_format,
+        header = struct.pack(Package.header_format,
             self.identification,
             self.flags.encode(),
             len(self._questions),
@@ -155,47 +159,52 @@ class Package:
 class PackageParser:
     def __init__(self, pkg: bytes):
         self._pkg = pkg
+        self._pos = 0
 
     def _data(self, length: int):
-        return self._pkg[:length)
+        return self._pkg[self._pos: self._pos + length]
 
     def _consume(self, length: int):
-        self._pkg = self._pkg[length:]
+        self._pos += length
 
-    def _read_name(self) -> str:
+    def _byte_at(position: int):
+        return self._pkg[self._pos + position]
+
+    def _read_name(self, start_idx) -> str:
         res = []
-        idx = 0;
+        idx = start_idx;
         while True:
-            length = query[idx]
+            length = self._pkg[idx]
             if length==0:
-                self._consume(idx+1)
+                self._consume(idx + 1 - start_idx)
                 return ".".join(part for part in res)
-            res.append(query[idx+1: idx+1+length].decode(ENCODING))
+            res.append(self._pkg[idx+1: idx+1+length].decode(ENCODING))
             idx += 1 + length
 
     def parseQuestion(self) -> Question:
-        name = self._read_name()
+        name = self._read_name(self._pos)
+        print(name)  # TODO
         unpacker = struct.Struct(Question.body_format)
         qtype, qclass = unpacker.unpack(self._data(unpacker.size))
         self._consume(unpacker.size)
-        raise Question(name, qtype, qclass)
+        return Question(name, qtype, qclass)
 
     def parseFlags(self) -> Flags:
         data = self._data(2)
         self._consume(2)
-        flgs = bitstring.BitArray(data).unpack(Flags.flasgs_format)
+        flgs = bitstring.BitArray(data).unpack(Flags.flags_format)
         QR, opcode, AA, TC, RD, RA, _, rcode = flgs
-        return cls(QR, opcode, AA, TC, RD, RA, rcode)
+        return Flags(QR, opcode, AA, TC, RD, RA, rcode)
 
     def parsePackage(self) -> Package:
-        identification = struct.unpack(">H", self._data(2))
+        identification = struct.unpack(">H", self._data(2))[0]
         self._consume(2)
         flgs = self.parseFlags()
         q, a, ar, er = struct.unpack(">HHHH", self._data(8))
         self._consume(8)
-        questions = (self.parseQuestion() for _ in range(q))
-        answers = (self.parseQuestion() for _ in range(a))
-        access_rights = (self.parseQuestion() for _ in range(ar))
-        extra_records = (self.parseQuestion() for _ in range(er))
+        questions = [self.parseQuestion() for _ in range(q)]
+        answers = []  # (self.parseQuestion() for _ in range(a))
+        access_rights = []  # (self.parseQuestion() for _ in range(ar))
+        extra_records = []  # (self.parseQuestion() for _ in range(er))
         return Package(identification, flgs, questions, answers,
-                       access_rights, extra_records)  # TODO Test me
+                       access_rights, extra_records)
