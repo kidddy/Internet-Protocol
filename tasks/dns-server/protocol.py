@@ -1,6 +1,7 @@
 
 import bitstring
 import struct
+import hexdump
 
 
 ENCODING = "ascii"
@@ -13,17 +14,6 @@ def name2query(domain_name: str) -> bytes:
     return res
 
 
-def query2name(query: bytes) -> (str, bytes):
-    res = []
-    idx = 0;
-    while True:
-        length = query[idx]
-        if length==0:
-            return (".".join(part for part in res), query[idx+1:])
-        res.append(query[idx+1: idx+1+length].decode(ENCODING))
-        idx += 1 + length
-
-
 class Question:
 
     body_format = ">HH"
@@ -33,25 +23,74 @@ class Question:
 
     QCLASS_IN = 1
 
-    def __init__(self, domain_name: str, q_type: int, q_class=QCLASS_IN):
+    def __init__(self, domain_name: str, qtype: int, qclass=QCLASS_IN):
         self.domain_name = domain_name
-        self.type = q_type
-        self.cls = q_class
+        self.type = qtype
+        self.cls = qclass
 
     def encode(self) -> bytes:
         b_name = name2query(self.domain_name)
         return b_name + struct.pack(Question.body_format,
                                     self.type, self.cls)
 
+    def pprint(self):
+        indent = " " * 4
+        yield "Question:"
+        yield indent + "domain_name: {}".format(self.domain_name)
+        yield indent + "type: {}".format(self.type)
+        yield indent + "cls: {}".format(self.cls)
 
-class Answer:
+    def hexdump(self):
+        yield from hexdump.dumpgen(self.encode())
+
+    def copy(self, **kwargs):
+        if ("domain_name" not in kwargs): kwargs["domain_name"] = self.domain_name
+        if ("qtype" not in kwargs): kwargs["qtype"] = self.type
+        if ("qclass" not in kwargs): kwargs["qclass"] = self.cls
+        return Question(**kwargs)
+
+
+class Answer(Question):
+
+    body_format = ">HHIH"
     
-    def __init__(self,domain_name: str, qtype: int, qclass: int, ttl: int,
-                 rdata):
-        pass  # TODO
+    def __init__(self,domain_name: str, qtype: int, qclass: int,
+                 ttl: int, rdata: str):
+        super().__init__(domain_name, qtype, qclass)
+        self.ttl = ttl
+        self.rdata = rdata
 
-    def encode(self):
-        raise NotImplementedError()  # TODO
+    def encode(self) -> bytes:
+        res = super().encode()
+
+        b_rdata = b""
+        if self.type == Answer.QTYPE_A:
+            b_rdata = bytes(int(octet) for octet in self.rdata.split('.'))
+        elif self.type == Answer.QTYPE_NS:
+            b_rdata = name2query(self.rdata)
+
+        res += struct.pack(">IH", self.ttl, len(b_rdata))
+        return res + b_rdata
+
+    def pprint(self):
+        indent = " " * 4
+        yield "Answer:"
+        yield indent + "domain_name: {}".format(self.domain_name)
+        yield indent + "type: {}".format(self.type)
+        yield indent + "cls: {}".format(self.cls)
+        yield indent + "ttl: {}".format(self.ttl)
+        yield indent + "rdata: {}".format(self.rdata)
+
+    def hexdump(self):
+        yield from hexdump.dumpgen(self.encode())
+
+    def copy(self, **kwargs):
+        if ("domain_name" not in kwargs): kwargs["domain_name"] = self.domain_name
+        if ("qtype" not in kwargs): kwargs["qtype"] = self.type
+        if ("qclass" not in kwargs): kwargs["qclass"] = self.cls
+        if ("ttl" not in kwargs): kwargs["ttl"] = self.ttl
+        if ("rdata" not in kwargs): kwargs["rdata"] = self.rdata
+        return Answer(**kwargs)
 
 
 class Flags:
@@ -111,6 +150,30 @@ class Flags:
             0,
             self.rcode).tobytes()
 
+    def pprint(self):
+        indent = " " * 4
+        yield "flags:"
+        yield indent + "QR: {}".format(self.QR)
+        yield indent + "opcode: {}".format(self.opcode)
+        yield indent + "AA: {}".format(self.AA)
+        yield indent + "TC: {}".format(self.TC)
+        yield indent + "RD: {}".format(self.RD)
+        yield indent + "RA: {}".format(self.RA)
+        yield indent + "rcode: {}".format(self.rcode)
+
+    def hexdump(self):
+        yield from hexdump.dumpgen(self.encode())
+
+    def copy(self, **kwargs):
+        if ("QR" not in kwargs): kwargs["QR"] = self.QR
+        if ("opcode" not in kwargs): kwargs["opcode"] = self.opcode
+        if ("AA" not in kwargs): kwargs["AA"] = self.AA
+        if ("TC" not in kwargs): kwargs["TC"] = self.TC
+        if ("RD" not in kwargs): kwargs["RD"] = self.RD
+        if ("RA" not in kwargs): kwargs["RA"] = self.RA
+        if ("rcode" not in kwargs): kwargs["rcode"] = self.rcode
+        return Flags(**kwargs)
+
 
 class Package:
 
@@ -127,19 +190,19 @@ class Package:
 
     @property
     def questions(self):
-        return (question for question in self._questions)
+        return tuple(question for question in self._questions)
     
     @property
     def answers(self):
-        return (answer for answer in self._answer)
+        return tuple(answer for answer in self._answer)
     
     @property
     def access_rights(self):
-        return (record for record in self._access_rights)
+        return tuple(record for record in self._access_rights)
     
     @property
     def extra_records(self):
-        return (record for record in self._extra_records)
+        return tuple(record for record in self._extra_records)
     
     def encode(self) -> bytes:
         header = struct.pack(Package.header_format,
@@ -155,6 +218,45 @@ class Package:
         extra_records = b"".join((record.encode() for record in self._extra_records))
         return header + questions + answers + access_rights + extra_records
 
+    def pprint(self):
+        indent = " " * 4
+        yield "DNS Package:"
+        yield indent + "identification: {}".format(self.identification)
+        yield from (indent + line for line in self.flags.pprint())
+        for record in self._questions:
+            yield from (indent + line for line in record.pprint())
+        for record in self._answers:
+            yield from (indent + line for line in record.pprint())
+        for record in self._access_rights:
+            yield from (indent + line for line in record.pprint())
+        for record in self._extra_records:
+            yield from (indent + line for line in record.pprint())
+
+    def hexdump(self):
+        yield from hexdump.dumpgen(self.encode())
+
+    def copy(self, **kwargs):
+        if ("identification" not in kwargs):
+            kwargs["identification"] = self.identification
+        if ("flags" not in kwargs): kwargs["flags"] = self.flags.copy()
+        if ("questions" not in kwargs):
+            records = []
+            records.extend(record.copy() for record in self._questions)
+            kwargs["questions"] = records
+        if ("answers" not in kwargs):
+            records = []
+            records.extend(record.copy() for record in self._answers)
+            kwargs["answers"] = records
+        if ("access_rights" not in kwargs):
+            records = []
+            records.extend(record.copy() for record in self._access_rights)
+            kwargs["access_rights"] = records
+        if ("extra_records" not in kwargs):
+            records = []
+            records.extend(record.copy() for record in self._extra_records)
+            kwargs["extra_records"] = records
+        return Package(**kwargs)
+
 
 class PackageParser:
     def __init__(self, pkg: bytes):
@@ -167,27 +269,45 @@ class PackageParser:
     def _consume(self, length: int):
         self._pos += length
 
-    def _byte_at(position: int):
-        return self._pkg[self._pos + position]
-
     def _read_name(self, start_idx) -> str:
         res = []
         idx = start_idx;
         while True:
             length = self._pkg[idx]
+            if length >= 192:
+                next_idx = struct.unpack(">H", self._pkg[idx: idx + 2])[0]
+                next_idx -= struct.unpack(">H", b"\xc0\x00")[0]
+                name, _ = self._read_name(next_idx)
+                res.append(name)
+                return ".".join(part for part in res), idx + 2 - start_idx
             if length==0:
-                self._consume(idx + 1 - start_idx)
-                return ".".join(part for part in res)
+                return ".".join(part for part in res), idx + 1 - start_idx
             res.append(self._pkg[idx+1: idx+1+length].decode(ENCODING))
             idx += 1 + length
 
     def parseQuestion(self) -> Question:
-        name = self._read_name(self._pos)
-        print(name)  # TODO
+        name, to_consume = self._read_name(self._pos)
+        self._consume(to_consume)
         unpacker = struct.Struct(Question.body_format)
         qtype, qclass = unpacker.unpack(self._data(unpacker.size))
         self._consume(unpacker.size)
         return Question(name, qtype, qclass)
+
+    def parseAnswer(self) -> Answer:
+        name, to_consume = self._read_name(self._pos)
+        self._consume(to_consume)
+        unpacker = struct.Struct(Answer.body_format)
+        qtype, qclass, ttl, rdata_length = unpacker.unpack(self._data(unpacker.size))
+        self._consume(unpacker.size)
+
+        rdata = ""
+        if (qclass == Answer.QTYPE_A):
+            rdata = ".".join(str(octet) for octet in self._data(rdata_length))
+        elif (qclass == Answer.QTYPE_NS):
+            rdata, _ = self._read_name(self._pos)
+            self._consume(rdata_length)
+
+        return Answer(name, qtype, qclass, ttl, rdata)
 
     def parseFlags(self) -> Flags:
         data = self._data(2)
@@ -203,7 +323,7 @@ class PackageParser:
         q, a, ar, er = struct.unpack(">HHHH", self._data(8))
         self._consume(8)
         questions = [self.parseQuestion() for _ in range(q)]
-        answers = []  # (self.parseQuestion() for _ in range(a))
+        answers = [self.parseAnswer() for _ in range(a)]
         access_rights = []  # (self.parseQuestion() for _ in range(ar))
         extra_records = []  # (self.parseQuestion() for _ in range(er))
         return Package(identification, flgs, questions, answers,
