@@ -6,12 +6,36 @@ import hexdump
 
 ENCODING = "ascii"
 
-def name2query(domain_name: str) -> bytes:
-    res = bytes()
-    for part in domain_name.split("."):
-        res += bytes([len(part)]) + part.encode(ENCODING)
-    res += bytes([0])
-    return res
+def name2query(domain_name: str, domain_map=dict()) -> (bytes, dict):
+    """Translates domain to bytes object.
+
+    Args:
+        domain_name: simple str domain, for example "duckduckgo.com"
+        domain_map: dict: domain => int:position in package,
+            it uses for compression.
+
+    Return tuple:
+        bytes - translated domain name
+        dict - domain local map (need to update generic domain_map)
+    """
+    #  res = bytes()
+    #  for part in domain_name.split("."):
+        #  res += bytes([len(part)]) + part.encode(ENCODING)
+    #  res += bytes([0])
+    #  return res
+    b_res = bytes()
+    d_res = dict() 
+    part_name = ""
+    pos = 0
+    while domain_name != "":
+        if domain_name in domain_map:
+            b_res += struct.pack(">H", domain_map[domain_name] | 0b1100000000000000)
+            break
+        if domain_name != "": d_res[domain_name] = pos
+        part, _, domain_name = domain_name.partition(".")
+        pos += len(part) + 1
+        b_res += bytes([len(part)]) + part.encode(ENCODING)
+    return b_res, d_res
 
 
 class Question:
@@ -28,10 +52,13 @@ class Question:
         self.type = qtype
         self.cls = qclass
 
-    def encode(self) -> bytes:
-        b_name = name2query(self.domain_name)
-        return b_name + struct.pack(Question.body_format,
+    def encode(self, domain_map=dict(), position=None) -> bytes:
+        b_name, d_map = name2query(self.domain_name, domain_map)
+        res = b_name + struct.pack(Question.body_format,
                                     self.type, self.cls)
+        if position is None: return res
+        domain_map.update({name: d_map[name] + position for name in d_map})
+        return res
 
     def pprint(self):
         indent = " " * 4
@@ -60,14 +87,16 @@ class Answer(Question):
         self.ttl = ttl
         self.rdata = rdata
 
-    def encode(self) -> bytes:
-        res = super().encode()
+    def encode(self, domain_map=dict(), position=None) -> bytes:
+        res = super().encode(domain_map, position)
 
         b_rdata = b""
         if self.type == Answer.QTYPE_A:
             b_rdata = bytes(int(octet) for octet in self.rdata.split('.'))
         elif self.type == Answer.QTYPE_NS:
-            b_rdata = name2query(self.rdata)
+            b_rdata, d_map = name2query(self.rdata, domain_map)
+            if position is not None:
+                domain_map.update({name: d_map[name] + position for name in d_map})
 
         res += struct.pack(">IH", self.ttl, len(b_rdata))
         return res + b_rdata
@@ -204,7 +233,8 @@ class Package:
     def extra_records(self):
         return tuple(record for record in self._extra_records)
     
-    def encode(self) -> bytes:
+    def encode(self, compress=True) -> bytes:
+        result = b""
         header = struct.pack(Package.header_format,
             self.identification,
             self.flags.encode(),
@@ -212,11 +242,18 @@ class Package:
             len(self._answers),
             len(self._access_rights),
             len(self._extra_records))
-        questions = b"".join((record.encode() for record in self._questions))
-        answers = b"".join((record.encode() for record in self._answers))
-        access_rights = b"".join((record.encode() for record in self._access_rights))
-        extra_records = b"".join((record.encode() for record in self._extra_records))
-        return header + questions + answers + access_rights + extra_records
+        result += header
+        domain_map = dict()  # domain_name => position  TODO
+        questions = ""  # .join((record.encode() for record in self._questions))
+        for record in self._questions:
+            result += record.encode(domain_map, len(result))
+        answers = b""  # .join((record.encode() for record in self._answers))
+        for record in self._answers:
+            result += record.encode(domain_map, len(result))
+        access_rights = b""  # .join((record.encode() for record in self._access_rights))
+        extra_records = b""  # .join((record.encode() for record in self._extra_records))
+        #  return header + questions + answers + access_rights + extra_records
+        return result
 
     def pprint(self):
         indent = " " * 4

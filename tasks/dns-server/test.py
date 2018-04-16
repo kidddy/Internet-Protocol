@@ -1,8 +1,8 @@
 #!/usr/local/bin/python3
 
-
 import protocol
 import hexdump
+import time
 
 
 def test_1():
@@ -31,11 +31,12 @@ def test_2():
     type_a = b"\x00\x01"
     class_q = b"\x00\x01"
     name_sh = b"\xc0\x0c"
-    data = header + namef + names + endn + type_a + class_q + name_sh + type_a + class_q + b"\x03www\xc0\x0c" + type_a + class_q
+    data = header + namef + names + endn + type_a + class_q + name_sh + b"\x00\x02" + class_q + b"\x03www\xc0\x0c" + type_a + class_q
     [print(line) for line in hexdump.dumpgen(data)]
     pp = protocol.PackageParser(data)
     p = pp.parsePackage()
     [print(line) for line in p.pprint()]
+    return p
 
 
 def str_to_bytes(s):
@@ -52,8 +53,32 @@ def test_3():
     [print(line) for line in p.hexdump()]
 
 
+def test_4():
+    # Let's imagine that we are dns server and got std query
+    query = test_2()
+    # our cache:
+    cache_A = {"yandex.ru": ("77.88.55.77", 1523853480, 30*60),
+               "www.yandex.ru": ("5.255.255.70", 1523853480, 30*60)}
+    cache_NS = {"yandex.ru": ("ns1.yandex.ru", 1523853480, 30*60)}
+    cache = {protocol.Question.QTYPE_A: cache_A,
+             protocol.Question.QTYPE_NS: cache_NS}
+    #  Create answer package
+    answers = []
+    for question in query.questions:
+        rdata, added, ttl = cache[question.type][question.domain_name]
+        answers.append(protocol.Answer(
+            question.domain_name,
+            question.type,
+            question.cls,
+            int(ttl - (time.time() - added)),
+            rdata))
+    res = query.copy(flags=protocol.Flags(1, 1, False, False, True, True, 0), answers=answers)
+    [print(line) for line in res.hexdump()]
+    [print(line) for line in res.pprint()]
+
+
 def main():
-    test_3()
+    test_4()
 
 
 if __name__ == '__main__':
