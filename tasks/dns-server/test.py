@@ -4,6 +4,7 @@ import protocol
 import hexdump
 import cache
 import time
+import resolver
 
 
 def test_1():
@@ -87,8 +88,19 @@ def test_5():
     print(q.pop())
 
 
+def test_6():
+    q = protocol.Question("duckduckgo.com", protocol.Question.QTYPE_NS)
+    fl = protocol.Flags(protocol.Flags.QR_REQ,
+                        protocol.Flags.OPCODE_STD,
+                        False, False, True, False,
+                        protocol.Flags.RCODE_OK)
+    p = protocol.Package(5, fl, [q])
+    answ = resolver.send_and_get(p.encode(), "212.119.251.178")
+    [print(line) for line in hexdump.dumpgen(answ)]
+
+
 def main():
-    test_5()
+    test_6()
 
 
 if __name__ == '__main__':
