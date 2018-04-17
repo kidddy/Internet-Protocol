@@ -2,6 +2,7 @@
 
 import protocol
 import hexdump
+import cache
 import time
 
 
@@ -76,9 +77,18 @@ def test_4():
     [print(line) for line in res.hexdump()]
     [print(line) for line in res.pprint()]
 
+def test_5():
+    q = cache.Queue()
+    e1 = q.add(10)
+    e2 = q.add(11)
+    e3 = q.add(12)
+    q.remove(e3)
+    print(q.pop())
+    print(q.pop())
+
 
 def main():
-    test_4()
+    test_5()
 
 
 if __name__ == '__main__':
