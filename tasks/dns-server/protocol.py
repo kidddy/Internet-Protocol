@@ -18,24 +18,19 @@ def name2query(domain_name: str, domain_map=dict()) -> (bytes, dict):
         bytes - translated domain name
         dict - domain local map (need to update generic domain_map)
     """
-    #  res = bytes()
-    #  for part in domain_name.split("."):
-        #  res += bytes([len(part)]) + part.encode(ENCODING)
-    #  res += bytes([0])
-    #  return res
-    b_res = bytes()
+    b_res = b""
     d_res = dict() 
-    part_name = ""
+    if domain_name == ".": return b_res + b"\x00", d_res
     pos = 0
     while domain_name != "":
         if domain_name in domain_map:
             b_res += struct.pack(">H", domain_map[domain_name] | 0b1100000000000000)
-            break
-        if domain_name != "": d_res[domain_name] = pos
+            return b_res, d_res
+        d_res[domain_name] = pos
         part, _, domain_name = domain_name.partition(".")
         pos += len(part) + 1
         b_res += bytes([len(part)]) + part.encode(ENCODING)
-    return b_res, d_res
+    return b_res + b"\x00", d_res
 
 
 class Question:
@@ -57,7 +52,8 @@ class Question:
         res = b_name + struct.pack(Question.body_format,
                                     self.type, self.cls)
         if position is None: return res
-        domain_map.update({name: d_map[name] + position for name in d_map})
+        domain_map.update({name: d_map[name] + position for name in d_map
+                           if name not in domain_map})
         return res
 
     def pprint(self):
@@ -318,7 +314,7 @@ class PackageParser:
                 res.append(name)
                 return ".".join(part for part in res), idx + 2 - start_idx
             if length==0:
-                return ".".join(part for part in res), idx + 1 - start_idx
+                return ".".join(part for part in res) + ".", idx + 1 - start_idx
             res.append(self._pkg[idx+1: idx+1+length].decode(ENCODING))
             idx += 1 + length
 
@@ -338,12 +334,13 @@ class PackageParser:
         self._consume(unpacker.size)
 
         rdata = ""
-        if (qclass == Answer.QTYPE_A):
+        if (qtype == Answer.QTYPE_A):
             rdata = ".".join(str(octet) for octet in self._data(rdata_length))
-        elif (qclass == Answer.QTYPE_NS):
+        elif (qtype == Answer.QTYPE_NS):
             rdata, _ = self._read_name(self._pos)
-            self._consume(rdata_length)
-
+        else:
+            rdata = self._data(rdata_length)
+        self._consume(rdata_length)
         return Answer(name, qtype, qclass, ttl, rdata)
 
     def parseFlags(self) -> Flags:

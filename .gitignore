@@ -1,3 +1,4 @@
 achron.exe
 *__pycache__*
 *.swp
+*.data

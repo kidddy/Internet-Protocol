@@ -89,14 +89,25 @@ def test_5():
 
 
 def test_6():
-    q = protocol.Question("duckduckgo.com", protocol.Question.QTYPE_NS)
+    q = protocol.Question("h.root-servers.net.", protocol.Question.QTYPE_A)
     fl = protocol.Flags(protocol.Flags.QR_REQ,
                         protocol.Flags.OPCODE_STD,
                         False, False, True, False,
                         protocol.Flags.RCODE_OK)
     p = protocol.Package(5, fl, [q])
-    answ = resolver.send_and_get(p.encode(), "212.119.251.178")
-    [print(line) for line in hexdump.dumpgen(answ)]
+    data = p.encode()
+    answ = resolver.send_and_get(data)
+    pp = protocol.PackageParser(answ)
+    p = pp.parsePackage()
+    [print(line) for line in p.pprint()]
+
+def test_7():
+    with open("example.data", "rb") as f:
+        data = f.read()
+    [print(line) for line in hexdump.dumpgen(data)]
+    pp = protocol.PackageParser(data)
+    p = pp.parsePackage()
+    [print(line) for line in p.pprint()]
 
 
 def main():
