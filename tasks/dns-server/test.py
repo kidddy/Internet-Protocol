@@ -74,7 +74,8 @@ def test_4():
             question.cls,
             int(ttl - (time.time() - added)),
             rdata))
-    res = query.copy(flags=protocol.Flags(1, 1, False, False, True, True, 0), answers=answers)
+    res = query.copy(flags=protocol.Flags(1, 1, False, False, True, True, 0),
+                     answers=answers)
     [print(line) for line in res.hexdump()]
     [print(line) for line in res.pprint()]
 
@@ -96,22 +97,18 @@ def test_6():
                         protocol.Flags.RCODE_OK)
     p = protocol.Package(5, fl, [q])
     data = p.encode()
-    answ = resolver.send_and_get(data)
+    answ, _ = resolver.send_and_get(data)
     pp = protocol.PackageParser(answ)
     p = pp.parsePackage()
     [print(line) for line in p.pprint()]
 
 def test_7():
-    with open("example.data", "rb") as f:
-        data = f.read()
-    [print(line) for line in hexdump.dumpgen(data)]
-    pp = protocol.PackageParser(data)
-    p = pp.parsePackage()
-    [print(line) for line in p.pprint()]
+    p = resolver.resolve_ns(".", qtype=protocol.Question.QTYPE_NS, ns_server=1)
+    # [print(line) for line in p.pprint()]
 
 
 def main():
-    test_6()
+    test_7()
 
 
 if __name__ == '__main__':

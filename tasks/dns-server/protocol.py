@@ -219,7 +219,7 @@ class Package:
     
     @property
     def answers(self):
-        return tuple(answer for answer in self._answer)
+        return tuple(answer for answer in self._answers)
     
     @property
     def access_rights(self):
@@ -362,3 +362,31 @@ class PackageParser:
         extra_records = []  # (self.parseQuestion() for _ in range(er))
         return Package(identification, flgs, questions, answers,
                        access_rights, extra_records)
+
+
+class PackageBuilder:
+    def __init__(self, identification: int):
+        self.identification = identification
+        self._flags = {"QR": Flags.QR_REQ,
+                       "opcode": Flags.OPCODE_STD,
+                       "AA": False,
+                       "TC": False,
+                       "RD": True,
+                       "RA": False,
+                       "rcode": Flags.RCODE_OK}
+        self._questions = []
+        self._answers = []
+
+    def add_question(self, domain_name, qtype, qclass=Question.QCLASS_IN):
+        self._questions.append(Question(domain_name, qtype, qclass))
+
+    def add_answer(self, domain_name, qtype, ttl, rdata,
+                   qclass=Answer.QCLASS_IN):
+        self._answers.append(Answer(domain_name, qtype, qclass, ttl, rdata))
+
+    def set_flags(self, **kwargs):
+        self._flags.update(kwargs)
+
+    def build(self):
+        fl = Flags(**self._flags)
+        return Package(self.identification, fl, self._questions, self._answers)
