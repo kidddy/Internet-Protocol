@@ -103,8 +103,8 @@ def test_6():
     [print(line) for line in p.pprint()]
 
 def test_7():
-    p, data = resolver.ask_server("ru.", protocol.Question.QTYPE_NS,
-                                  "198.41.0.4")
+    p, data = resolver.ask_server(".", protocol.Question.QTYPE_NS,
+                                  "google.com")
     [print(line) for line in p.pprint()]
     [print(line) for line in hexdump.dumpgen(data)]
 

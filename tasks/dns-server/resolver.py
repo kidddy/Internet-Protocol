@@ -32,12 +32,12 @@ def send_and_get(pkg: bytes, ns_server=GOOGLE_DNS):
 def ask_server(name_question: str, qtype: int, ns_server):
     """Create package, send it to ns_server and return parsed answer"""
     pb = protocol.PackageBuilder(42)
-    pb.set_flags(RA=True, RD=False)
+    pb.set_flags(RA=True)
     pb.add_question(name_question, qtype, qclass=1)
     pkg = pb.build().encode()
+    [print(line) for line in hexdump.dumpgen(pkg)]
 
-    answ, _ = send_and_get(pkg)
-    [print(line) for line in hexdump.dumpgen(answ)]
+    answ, _ = send_and_get(pkg, ns_server)
     pp = protocol.PackageParser(answ)
 
     return pp.parsePackage(), answ
