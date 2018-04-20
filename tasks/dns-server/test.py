@@ -90,12 +90,13 @@ def test_5():
 
 
 def test_6():
-    q = protocol.Question("h.root-servers.net.", protocol.Question.QTYPE_A)
+    q1 = protocol.Question("yandex.ru", protocol.Question.QTYPE_A)
+    q2 = protocol.Question("lol.kek.cheburek", protocol.Question.QTYPE_A)
     fl = protocol.Flags(protocol.Flags.QR_REQ,
                         protocol.Flags.OPCODE_STD,
                         False, False, True, False,
                         protocol.Flags.RCODE_OK)
-    p = protocol.Package(5, fl, [q])
+    p = protocol.Package(5, fl, [q1, q2])
     data = p.encode()
     answ, _ = resolver.send_and_get(data)
     pp = protocol.PackageParser(answ)
@@ -109,7 +110,7 @@ def test_7():
     [print(line) for line in hexdump.dumpgen(data)]
 
 def main():
-    test_7()
+    test_6()
 
 
 if __name__ == '__main__':

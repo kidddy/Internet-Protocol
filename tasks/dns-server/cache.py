@@ -121,8 +121,9 @@ class Cache:
 
         entry_idx = 0
         while entry_idx < len(entry_list):
-            if entry_list[entry_idx].remove_time > curr_time:
-                res.append(entry_list[entry_idx].value)
+            ttl = entry_list[entry_idx].remove_time - curr_time
+            if ttl > 0:
+                res.append(entry_list[entry_idx].value, int(ttl))
                 entry_idx += 1
             else: entry_list.pop(entry_idx)
         if len(entry_list) == 0: self.remove(key)
@@ -143,12 +144,12 @@ class Cache:
         return key in self._table
 
     def refresh(self):
-        for key in self._table:
-            self._lock.acquire()
-            try:
+        self._lock.acquire()
+        try:
+            for key in self._table:
                 self.fresh(key)
-            finally:
-                self._lock.release()
+        finally:
+            self._lock.release()
 
     @property
     def keys(self):
