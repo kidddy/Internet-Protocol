@@ -6,9 +6,9 @@ import time
 import protocol
 import cache
 import resolver
-import logging
+import socket
 from itertools import chain
-from concurrent.futures import TreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 MAX_THREADS = 5
@@ -31,7 +31,7 @@ class Server:
 
         self._sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self._sock.bind((Server.HOST, Server.PORT))
-        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_THREADS)
+        #  self._thread_pool = ThreadPoolExecutor(max_workers=MAX_THREADS)
 
     def freshing_cache(self):
         while True:
@@ -40,30 +40,43 @@ class Server:
                 cache.refresh()
 
     def start(self):
-        self._thread_pool.submit(self.freshing_cache)
+        #  self._thread_pool.submit(self.freshing_cache)
         while True:
             query, dest = self._sock.recvfrom(512)
-            self._thread_pool.submit(self._resolve, query, dest)
+            #  self._thread_pool.submit(self._resolve, query, dest)
+            self._resolve(query, dest)
 
     def _resolve(self, query: bytes, dest_addr):
         pp = protocol.PackageParser(query)
         query_pkg = pp.parsePackage()
-        answers = []
+
+        pb_res = protocol.PackageBuilder(query_pkg.identification)
         for question in query_pkg.questions:
-            qtype = question.qtype
+            qtype = question.type
             domain_name = question.domain_name
+            pb_res.add_question(domain_name, qtype)
+
             respond = self.get_from_cache(domain_name, qtype)
             if respond is None: continue
             if respond:
-                answers.extend(respond)
+                for rdata, ttl in respond:
+                    pb_res.add_answer(domain_name, qtype, ttl, rdata)
             else:
-                answ_pkg = resolver.ask_serverok(domain_name, qtype, self._ns_server)
+                try:
+                    answ_pkg, _ = resolver.ask_serverok(domain_name, qtype,
+                                                        self._ns_server)
+                except socket.timeout:
+                    continue
                 self._update_cache(answ_pkg)
                 respond = self.get_from_cache(domain_name, qtype)
                 if respond:
-                    answers.extend(respond)
-        if answers:
-            pb = PackageBuilder(query_pkg.identification)
+                    for rdata, ttl in respond:
+                        pb_res.add_answer(domain_name, qtype, ttl, rdata)
+        if len(pb_res.answers) == 0:
+            pb_res.set_flags(rcode=2)
+        data = pb_res.build().encode()
+        self._sock.sendto(data, dest_addr)
+
 
     def _update_cache(self, pkg):
         if pkg.flags.rcode != protocol.Flags.RCODE_OK:
@@ -72,7 +85,7 @@ class Server:
                 cache.add(record.domain_name, "", time.time() + 30*60)
         for record in chain(pkg.answers, pkg.access_rights, pkg.extra_records):
             key = record.domain_name
-            qtype = record.qtype
+            qtype = record.type
             remove_time = time.time() + record.ttl
             rdata = record.rdata
             self._cache[qtype].add(key, rdata, remove_time)
@@ -82,10 +95,7 @@ class Server:
         if self._cache["error"].contains(domain_name):
             return None
         elif self._cache[qtype].contains(domain_name):
-            cached_data = self._cache[qtype].get(domain_name)
-            for rdata, ttl in cached_data:
-                res.append(protocol.Answer(domain_name, qtype,
-                                           protocol.Answer.QCLASS_IN, ttl, rdata))
+            res  = self._cache[qtype].get(domain_name)
         return res
 
 
@@ -98,6 +108,8 @@ def init_parser():
 def main():
     parser = init_parser()
     args = parser.parse_args(sys.argv[1:])
+    server = Server()
+    server.start()
 
 if __name__ == "__main__":
     main()

@@ -387,6 +387,14 @@ class PackageBuilder:
     def set_flags(self, **kwargs):
         self._flags.update(kwargs)
 
+    @property
+    def question(self):
+        return list(self._questions)
+
+    @property
+    def answers(self):
+        return list(self._answers)
+
     def build(self):
         fl = Flags(**self._flags)
         return Package(self.identification, fl, self._questions, self._answers)

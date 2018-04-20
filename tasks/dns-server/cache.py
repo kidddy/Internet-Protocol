@@ -123,7 +123,7 @@ class Cache:
         while entry_idx < len(entry_list):
             ttl = entry_list[entry_idx].remove_time - curr_time
             if ttl > 0:
-                res.append(entry_list[entry_idx].value, int(ttl))
+                res.append((entry_list[entry_idx].value, int(ttl)))
                 entry_idx += 1
             else: entry_list.pop(entry_idx)
         if len(entry_list) == 0: self.remove(key)
