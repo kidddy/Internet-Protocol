@@ -358,8 +358,8 @@ class PackageParser:
         self._consume(8)
         questions = [self.parseQuestion() for _ in range(q)]
         answers = [self.parseAnswer() for _ in range(a)]
-        access_rights = []  # (self.parseQuestion() for _ in range(ar))
-        extra_records = []  # (self.parseQuestion() for _ in range(er))
+        access_rights = [self.parseAnswer() for _ in range(ar)]
+        extra_records = [self.parseAnswer() for _ in range(er)]
         return Package(identification, flgs, questions, answers,
                        access_rights, extra_records)
 

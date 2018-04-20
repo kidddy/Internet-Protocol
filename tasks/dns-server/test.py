@@ -103,9 +103,10 @@ def test_6():
     [print(line) for line in p.pprint()]
 
 def test_7():
-    p = resolver.resolve_ns(".", qtype=protocol.Question.QTYPE_NS, ns_server=1)
-    # [print(line) for line in p.pprint()]
-
+    p, data = resolver.ask_server("ru.", protocol.Question.QTYPE_NS,
+                                  "198.41.0.4")
+    [print(line) for line in p.pprint()]
+    [print(line) for line in hexdump.dumpgen(data)]
 
 def main():
     test_7()
