@@ -108,7 +108,7 @@ def init_parser():
 def main():
     parser = init_parser()
     args = parser.parse_args(sys.argv[1:])
-    server = Server()
+    server = Server(args.server)
     server.start()
 
 if __name__ == "__main__":
