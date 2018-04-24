@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 
+import socket
 import protocol
 import hexdump
 import cache
@@ -109,8 +110,22 @@ def test_7():
     [print(line) for line in p.pprint()]
     [print(line) for line in hexdump.dumpgen(data)]
 
+def test_8():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(("192.168.43.15", 53))
+    query_bytes, dest = sock.recvfrom(512)
+    p_query = protocol.PackageParser(query_bytes).parsePackage()
+    pb = protocol.PackageBuilder(p_query.identification)
+    for record in p_query.questions:
+        pb.add_question(record.domain_name, record.type)
+    pb.add_answer("kidddy.man", protocol.Answer.QTYPE_A, 20,
+                  "192.168.43.15")
+    sock.sendto(pb.build().encode(), dest)
+        
+
+
 def main():
-    test_6()
+    test_8()
 
 
 if __name__ == '__main__':

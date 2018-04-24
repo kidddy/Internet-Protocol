@@ -85,6 +85,7 @@ class Answer(Question):
 
     def encode(self, domain_map=dict(), position=None) -> bytes:
         res = super().encode(domain_map, position)
+        position += len(res)
 
         b_rdata = b""
         if self.type == Answer.QTYPE_A:
@@ -92,7 +93,7 @@ class Answer(Question):
         elif self.type == Answer.QTYPE_NS:
             b_rdata, d_map = name2query(self.rdata, domain_map)
             if position is not None:
-                domain_map.update({name: d_map[name] + position for name in d_map})
+                domain_map.update({name: d_map[name] + position + 6 for name in d_map})
 
         res += struct.pack(">IH", self.ttl, len(b_rdata))
         return res + b_rdata
@@ -172,7 +173,7 @@ class Flags:
             self.TC,
             self.RD,
             self.RA,
-            0,
+            2,
             self.rcode).tobytes()
 
     def pprint(self):
@@ -243,12 +244,12 @@ class Package:
         questions = ""  # .join((record.encode() for record in self._questions))
         for record in self._questions:
             result += record.encode(domain_map, len(result))
-        answers = b""  # .join((record.encode() for record in self._answers))
         for record in self._answers:
             result += record.encode(domain_map, len(result))
-        access_rights = b""  # .join((record.encode() for record in self._access_rights))
-        extra_records = b""  # .join((record.encode() for record in self._extra_records))
-        #  return header + questions + answers + access_rights + extra_records
+        for record in self._access_rights:
+            result += record.encode(domain_map, len(result))
+        for record in self._extra_records:
+            result += record.encode(domain_map, len(result))
         return result
 
     def pprint(self):
